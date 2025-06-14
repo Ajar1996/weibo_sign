@@ -23,4 +23,24 @@
         FROM task_execution_log
         GROUP BY config_id, config_name
     </select>
+
+    <select id="selectByCondition" resultType="com.weibo.model.TaskExecutionLog">
+        SELECT *
+        FROM task_execution_log
+        <where>
+            <if test="param.configId != null">
+                AND config_id = #{param.configId}
+            </if>
+            <if test="param.weiboName != null and param.weiboName != ''">
+                AND config_name LIKE CONCAT('%', #{param.weiboName}, '%')
+            </if>
+            <if test="param.xianyuName != null and param.xianyuName != ''">
+                AND config_name LIKE CONCAT('%', #{param.xianyuName}, '%')
+            </if>
+            <if test="param.logTypeCode != null and param.logTypeCode != ''">
+                AND execution_type_code = #{param.logTypeCode}
+            </if>
+        </where>
+        ORDER BY create_time DESC
+    </select>
 </mapper>
