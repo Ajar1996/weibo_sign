@@ -5,6 +5,8 @@ import com.weibo.config.AppConfig;
 import com.weibo.exception.WeiboApiException;
 import com.weibo.model.WeiboConfig;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -13,17 +15,15 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
+@Service
 public class CookieManager {
-    private final Map<String, String> userCookies = new HashMap<>();
-    private final WeiboApiClient apiClient;
-    private final String rowUrl;  // 直接存储需要的配置
+    @Autowired
+    private WeiboApiClient apiClient;
 
-    public CookieManager(WeiboApiClient apiClient, String rowUrl) {
-        this.apiClient = apiClient;
-        this.rowUrl = rowUrl;
-    }
+
 
     public Map<String, String> loadCookiesFromConfig(WeiboConfig config) throws IOException {
+
         Map<String, String> userCookies = new HashMap<>();
         String[] urls = config.getRowUrl().split(";");
 
@@ -37,23 +37,8 @@ public class CookieManager {
         return userCookies;
     }
 
-    public void loadUserCookies() throws IOException {
-        String[] urls = this.rowUrl.split(";");  // 使用存储的配置
-        for (String url : urls) {
-            String cookie = extractCookieFromUrl(url);
-            String username = getUsernameFromCookie(cookie);
-            userCookies.put(username, cookie);
-            randomSleep(3, 5);
-        }
-    }
 
-    public Map<String, String> getUserCookies() {
-        return userCookies;
-    }
 
-    public boolean isEmpty() {
-        return userCookies.isEmpty();
-    }
 
     private String extractCookieFromUrl(String url) {
         int startPos = url.contains("cardlist?") ?

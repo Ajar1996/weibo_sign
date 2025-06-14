@@ -11,6 +11,7 @@ import com.weibo.service.TopicManager;
 import com.weibo.service.WeiboApiClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -23,13 +24,24 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class WeiboTaskScheduler {
-    private final WeiboConfigMapper configMapper;
-    private final CookieManager cookieManager;
-    private final TopicManager topicManager;
-    private final SignExecutor signExecutor;
-    private final NotifyFactory notifyFactory; // 替换原来的Notifier
-    private final WeiboApiClient apiClient;
+    @Autowired
+    private WeiboConfigMapper configMapper;
 
+    @Autowired
+    private CookieManager cookieManager;
+
+    @Autowired
+    private TopicManager topicManager;
+
+    @Autowired
+    private SignExecutor signExecutor;
+
+    @Autowired
+    private NotifyFactory notifyFactory;
+
+    @Autowired
+    private WeiboApiClient apiClient;
+    @Scheduled(initialDelay = 1, fixedRate = Long.MAX_VALUE)
     @Scheduled(cron = "${weibo.sign.cron:0 0 8 * * ?}")
     public void executeSignTask() {
         List<WeiboConfig> activeConfigs = configMapper.selectAllActive();
@@ -49,25 +61,25 @@ public class WeiboTaskScheduler {
     }
 
     private void executeSingleConfig(WeiboConfig config) throws IOException {
-        TopicManager configAwareTopicManager = new TopicManager(apiClient, config);
         Map<String, String> userCookies = cookieManager.loadCookiesFromConfig(config);
 
         userCookies.forEach((username, cookie) -> {
             try {
-                List<Topic> followList = configAwareTopicManager.getFollowList(username, cookie);
+                // 直接使用注入的topicManager
+                List<Topic> followList = topicManager.getFollowList(username, cookie, config);
 
-                if (configAwareTopicManager.isAllTopicsSigned(followList)) {
-                    log.info("用户[{}]所有超话已签到，跳过", username);
+                if (topicManager.isAllTopicsSigned(followList)) {
+                    log.info("跳过已签用户: {}", username);
                     return;
                 }
 
-                List<Topic> toSignList = configAwareTopicManager.prepareSignList(followList);
-                List<Topic> signedList = signExecutor.executeSign(cookie, toSignList);
-                configAwareTopicManager.updateUserTopics(username, signedList);
+                List<Topic> toSignList = topicManager.prepareSignList(followList, config);
+                List<Topic> signedList = signExecutor.executeSign(cookie, toSignList, config);
+                topicManager.updateUserTopics(username, signedList);
 
                 sendNotification(config, username, signedList);
             } catch (Exception e) {
-                throw new RuntimeException("用户[" + username + "]签到失败", e);
+                throw new RuntimeException("用户签到失败: " + username, e);
             }
         });
     }

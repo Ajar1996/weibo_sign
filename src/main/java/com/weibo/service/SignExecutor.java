@@ -5,6 +5,8 @@ import com.weibo.config.AppConfig;
 import com.weibo.model.Topic;
 import com.weibo.model.WeiboConfig;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -13,17 +15,16 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
+@Service
 public class SignExecutor {
-    private final WeiboApiClient apiClient;
-    private final WeiboConfig config;
+
+    @Autowired
+    private WeiboApiClient apiClient;
+
     private int currentSignedCount = 0;
 
-    public SignExecutor(WeiboApiClient apiClient, WeiboConfig config) {
-        this.apiClient = apiClient;
-        this.config = config;
-    }
 
-    public List<Topic> executeSign(String cookie, List<Topic> toSignList) throws IOException {
+    public List<Topic> executeSign(String cookie, List<Topic> toSignList, WeiboConfig config) throws IOException {
         List<Topic> signedList = new ArrayList<>();
 
         for (Topic topic : toSignList) {
@@ -46,9 +47,7 @@ public class SignExecutor {
         return signedList;
     }
 
-    public boolean isAllUsersSigned() {
-        return currentSignedCount >= config.getSignOnceCount();
-    }
+
 
     private void randomSleep(int minSec, int maxSec) {
         try {

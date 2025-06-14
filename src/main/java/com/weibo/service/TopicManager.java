@@ -5,6 +5,8 @@ import com.weibo.config.AppConfig;
 import com.weibo.model.Topic;
 import com.weibo.model.WeiboConfig;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.*;
@@ -12,20 +14,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Service
 public class TopicManager {
-    private final WeiboApiClient apiClient;
+
+    @Autowired
+    private WeiboApiClient apiClient;
+
     private final Map<String, List<Topic>> userTopics = new HashMap<>();
 
-    private final String isSort;       // 从构造器注入
-    private final int signOnceCount;   // 从构造器注入
+    public List<Topic> getFollowList(String username, String cookie, WeiboConfig config) throws IOException {
 
-    public TopicManager(WeiboApiClient apiClient, WeiboConfig config) {
-        this.apiClient = apiClient;
-        this.isSort = config.getIsSort();
-        this.signOnceCount = config.getSignOnceCount();
-    }
-
-    public List<Topic> getFollowList(String username, String cookie) throws IOException {
         List<Topic> followList = new ArrayList<>();
         String page = "1";
         String sinceId = "";
@@ -64,7 +62,10 @@ public class TopicManager {
         return followList;
     }
 
-    public List<Topic> prepareSignList(List<Topic> rawList) {
+    public List<Topic> prepareSignList(List<Topic> rawList, WeiboConfig config) {
+        // 使用config参数获取配置
+        String isSort = config.getIsSort();
+        int signOnceCount = config.getSignOnceCount();
         if (rawList == null || rawList.isEmpty()) {
             log.warn("输入的超话列表为空");
             return Collections.emptyList();
@@ -78,18 +79,18 @@ public class TopicManager {
         log.info("待签到超话数: {}/{}", toSignList.size(), rawList.size());
 
         // 2. 执行排序（使用构造器注入的isSort）
-        if ("INCREASE".equalsIgnoreCase(this.isSort)) {
+        if ("INCREASE".equalsIgnoreCase(isSort)) {
             log.debug("按等级升序排序");
             toSignList.sort(Comparator.comparingInt(this::extractLevel));
-        } else if ("DECREASE".equalsIgnoreCase(this.isSort)) {
+        } else if ("DECREASE".equalsIgnoreCase(isSort)) {
             log.debug("按等级降序排序");
             toSignList.sort((t1, t2) -> extractLevel(t2) - extractLevel(t1));
         }
 
         // 3. 限制单次签到数量（使用构造器注入的signOnceCount）
-        if (toSignList.size() > this.signOnceCount) {
-            log.info("限制签到数量: {} -> {}", toSignList.size(), this.signOnceCount);
-            toSignList = toSignList.subList(0, this.signOnceCount);
+        if (toSignList.size() > signOnceCount) {
+            log.info("限制签到数量: {} -> {}", toSignList.size(), signOnceCount);
+            toSignList = toSignList.subList(0, signOnceCount);
         }
 
         return toSignList;

@@ -2,12 +2,18 @@ package com.weibo.model;
 
 import lombok.Data;
 import java.util.Date;
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
         * 微博签到配置实体类
         */
 @Data
+@Component
 public class WeiboConfig {
+    @Autowired
+    public WeiboConfig() {
+    }
     /** 主键ID */
     private Integer id;
     

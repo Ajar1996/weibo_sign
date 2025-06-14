@@ -11,12 +11,13 @@ import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
+@Service
 public class WeiboApiClient {
     private static final String BASE_API_URL = "https://api.weibo.cn";
     private static final MediaType FORM = MediaType.get("application/x-www-form-urlencoded; charset=utf-8");

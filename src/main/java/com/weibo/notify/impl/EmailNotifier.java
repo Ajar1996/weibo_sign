@@ -37,7 +37,8 @@ public class EmailNotifier implements Notifier {
 
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-            
+
+            helper.setFrom("ajar1996@163.com");
             helper.setTo(config.getEmail().split(";"));
             helper.setSubject("微博签到结果");
             helper.setText(content, false); // 纯文本模式

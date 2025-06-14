@@ -3,6 +3,7 @@ package com.weibo.notify;
 import com.weibo.model.WeiboConfig;
 import com.weibo.notify.impl.EmailNotifier;
 import com.weibo.notify.impl.ServerChanNotifier;
+import io.micrometer.common.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
