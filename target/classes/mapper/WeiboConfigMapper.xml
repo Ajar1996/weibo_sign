@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.weibo.mapper.WeiboConfigMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.weibo.model.WeiboConfig">
+        <!-- 主键 -->
+        <id column="id" property="id" jdbcType="INTEGER"/>
+
+        <!-- 基础配置 -->
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="xianyu_name" property="xianyuName" jdbcType="VARCHAR"/>
+        <result column="email" property="email" jdbcType="VARCHAR"/>
+        <result column="weibo_nickname" property="weiboNickname" jdbcType="VARCHAR"/>
+        <result column="row_url" property="rowUrl" jdbcType="LONGVARCHAR"/>
+
+        <!-- 签到配置 -->
+        <result column="sign_once_count" property="signOnceCount" jdbcType="INTEGER"/>
+        <result column="is_sort" property="isSort" jdbcType="VARCHAR"/>
+        <result column="disp_type" property="dispType" jdbcType="VARCHAR"/>
+
+        <!-- 通知配置 -->
+        <result column="ding_secret" property="dingSecret" jdbcType="VARCHAR"/>
+        <result column="ding_webhook" property="dingWebhook" jdbcType="VARCHAR"/>
+        <result column="server_key" property="serverKey" jdbcType="VARCHAR"/>
+        <result column="qmsg_key" property="qmsgKey" jdbcType="VARCHAR"/>
+        <result column="qq_email" property="qqEmail" jdbcType="VARCHAR"/>
+
+        <!-- 状态配置 -->
+        <result column="is_active" property="isActive" jdbcType="TINYINT"/>
+        <result column="cron_expression" property="cronExpression" jdbcType="VARCHAR"/>
+        <result column="last_execute_time" property="lastExecuteTime" jdbcType="TIMESTAMP"/>
+
+        <!-- 系统字段 -->
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 插入语句新增 email -->
+    <insert id="insert" parameterType="com.weibo.model.WeiboConfig" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO weibo_config (
+            name, email, row_url,
+            sign_once_count, ding_secret, ding_webhook,
+            server_key, qmsg_key, is_sort, disp_type,
+            is_active, cron_expression
+        ) VALUES (
+                     #{name}, #{email}, #{rowUrl},
+                     #{signOnceCount}, #{dingSecret}, #{dingWebhook},
+                     #{serverKey}, #{qmsgKey}, #{isSort}, #{dispType},
+                     #{isActive}, #{cronExpression}
+                 )
+    </insert>
+
+    <!-- 更新语句新增 email -->
+    <update id="update" parameterType="com.weibo.model.WeiboConfig">
+        UPDATE weibo_config SET
+                                name = #{name},
+                                email = #{email},
+                                row_url = #{rowUrl},
+                                sign_once_count = #{signOnceCount},
+                                ding_secret = #{dingSecret},
+                                ding_webhook = #{dingWebhook},
+                                server_key = #{serverKey},
+                                qmsg_key = #{qmsgKey},
+                                is_sort = #{isSort},
+                                disp_type = #{dispType},
+                                is_active = #{isActive},
+                                cron_expression = #{cronExpression}
+        WHERE id = #{id}
+    </update>
+
+    <!-- 根据ID删除 -->
+    <delete id="deleteById" parameterType="int">
+        DELETE FROM weibo_config WHERE id = #{id}
+    </delete>
+
+    <!-- 根据ID查询 -->
+    <select id="selectById" parameterType="int" resultMap="BaseResultMap">
+        SELECT * FROM weibo_config WHERE id = #{id}
+    </select>
+
+    <!-- 查询所有有效配置 -->
+    <select id="selectAllActive" resultMap="BaseResultMap">
+        SELECT * FROM weibo_config
+        WHERE is_active = 1
+        ORDER BY id DESC
+    </select>
+
+    <!-- 更新最后执行时间 -->
+    <update id="updateLastExecuteTime">
+        UPDATE weibo_config
+        SET last_execute_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE weibo_config
+        SET is_active = #{status}
+        WHERE id = #{id}
+    </update>
+</mapper>
