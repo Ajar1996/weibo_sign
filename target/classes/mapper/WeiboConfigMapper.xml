@@ -22,15 +22,11 @@
         <result column="disp_type" property="dispType" jdbcType="VARCHAR"/>
 
         <!-- 通知配置 -->
-        <result column="ding_secret" property="dingSecret" jdbcType="VARCHAR"/>
-        <result column="ding_webhook" property="dingWebhook" jdbcType="VARCHAR"/>
         <result column="server_key" property="serverKey" jdbcType="VARCHAR"/>
-        <result column="qmsg_key" property="qmsgKey" jdbcType="VARCHAR"/>
-        <result column="qq_email" property="qqEmail" jdbcType="VARCHAR"/>
+
 
         <!-- 状态配置 -->
         <result column="is_active" property="isActive" jdbcType="TINYINT"/>
-        <result column="cron_expression" property="cronExpression" jdbcType="VARCHAR"/>
         <result column="last_execute_time" property="lastExecuteTime" jdbcType="TIMESTAMP"/>
 
         <!-- 系统字段 -->

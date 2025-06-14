@@ -1,8 +1,6 @@
 package com.weibo.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.weibo.config.AppConfig;
-import com.weibo.exception.WeiboApiException;
 import com.weibo.model.WeiboConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,17 +20,16 @@ public class CookieManager {
 
 
 
-    public Map<String, String> loadCookiesFromConfig(WeiboConfig config) throws IOException {
+    public Map<String, String> loadCookiesFromConfig(WeiboConfig config)  {
 
         Map<String, String> userCookies = new HashMap<>();
-        String[] urls = config.getRowUrl().split(";");
+        String url = config.getRowUrl();
 
-        for (String url : urls) {
+
             String cookie = extractCookieFromUrl(url);
             String username = getUsernameFromCookie(cookie);
             userCookies.put(username, cookie);
             randomSleep(3, 5);
-        }
 
         return userCookies;
     }
@@ -40,14 +37,14 @@ public class CookieManager {
 
 
 
-    private String extractCookieFromUrl(String url) {
+    public String extractCookieFromUrl(String url) {
         int startPos = url.contains("cardlist?") ?
                 url.indexOf("cardlist?") + "cardlist?".length() :
                 url.indexOf("aid");
         return url.substring(startPos);
     }
 
-    private String getUsernameFromCookie(String cookie) throws IOException {
+    public String getUsernameFromCookie(String cookie) {
         JsonNode json = apiClient.getUserInfo(cookie);
         return json.has("name") ?
                 json.get("name").asText() :

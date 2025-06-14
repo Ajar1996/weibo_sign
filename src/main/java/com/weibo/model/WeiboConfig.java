@@ -1,5 +1,7 @@
 package com.weibo.model;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import lombok.Data;
 import java.util.Date;
 import org.springframework.stereotype.Component;
@@ -11,13 +13,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Data
 @Component
 public class WeiboConfig {
-    @Autowired
-    public WeiboConfig() {
-    }
+
     /** 主键ID */
+    @TableId(type = IdType.AUTO)
     private Integer id;
     
-    /** 任务名称 */
+    /** 闲鱼名称 */
     private String name;
     
     /** 咸鱼账号昵称（原real_name） */
@@ -34,18 +35,9 @@ public class WeiboConfig {
     
     /** 单次签到数量限制 */
     private Integer signOnceCount;
-    
-    /** 钉钉机器人密钥 */
-    private String dingSecret;
-    
-    /** 钉钉Webhook地址 */
-    private String dingWebhook;
-    
+
     /** Server酱推送KEY */
     private String serverKey;
-    
-    /** Qmsg酱推送KEY */
-    private String qmsgKey;
     
     /** 是否排序（INCREASE/DECREASE/FALSE） */
     private String isSort;
@@ -53,14 +45,8 @@ public class WeiboConfig {
     /** 结果显示类型（DETAIL/SIMPLE） */
     private String dispType;
     
-    /** QQ邮箱（用于接收通知） */
-    private String qqEmail;
-    
     /** 是否启用（1启用 0禁用） */
     private Boolean isActive;
-    
-    /** 定时任务表达式 */
-    private String cronExpression;
     
     /** 最后执行时间 */
     private Date lastExecuteTime;

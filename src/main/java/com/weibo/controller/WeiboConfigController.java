@@ -2,18 +2,21 @@ package com.weibo.controller;
 
 import com.weibo.mapper.WeiboConfigMapper;
 import com.weibo.model.WeiboConfig;
-import com.weibo.task.WeiboTaskScheduler;
-import lombok.RequiredArgsConstructor;
+import com.weibo.service.CookieManager;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/weibo-configs")
-@RequiredArgsConstructor
 public class WeiboConfigController {
-    private final WeiboConfigMapper configMapper;
-    private final WeiboTaskScheduler taskScheduler;
+
+    @Autowired
+     WeiboConfigMapper configMapper;
+
+    @Autowired
+    CookieManager cookieManager;
 
     @GetMapping
     public List<WeiboConfig> getAllConfigs() {
@@ -22,6 +25,7 @@ public class WeiboConfigController {
 
     @PostMapping
     public void addConfig( @RequestBody WeiboConfig config) {
+        config.setWeiboNickname(cookieManager.getUsernameFromCookie(cookieManager.extractCookieFromUrl(config.getRowUrl())));
         configMapper.insert(config);
     }
 

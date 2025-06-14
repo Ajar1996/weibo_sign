@@ -5,6 +5,7 @@ import com.weibo.config.NotifyTemplateProperties;
 import lombok.extern.slf4j.Slf4j;
 
 
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -14,6 +15,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @SpringBootApplication
 @Slf4j
 @EnableScheduling
+@MapperScan("com.weibo.mapper")
 @EnableConfigurationProperties(NotifyTemplateProperties.class)
 public class WeiboSignApplication {
 

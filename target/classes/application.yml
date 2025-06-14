@@ -11,25 +11,36 @@ spring:
       max-active: 20
       max-wait: 60000
   mail:
-    host: smtp.qq.com
-    port: 587
-    username: your@qq.com
-    password: your-auth-code
+    username: ajar1996@163.com
+    password: SNRPELIODDEULBNI
+    host: smtp.163.com
+    port: 25
     protocol: smtp
-    properties:
-      mail.smtp.auth: true
-      mail.smtp.starttls.enable: true
-      mail.smtp.connectiontimeout: 5000
-      mail.smtp.timeout: 5000
-      mail.smtp.writetimeout: 5000
-      mail.smtp.ssl.protocols: TLSv1.2
+    admin: 991823402@qq.com # 管理员邮箱地址
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml
   configuration:
     map-underscore-to-camel-case: true
 
+mybatis-plus:
+  mapper-locations: classpath*:/mapper/**/*.xml
+  global-config:
+    db-config:
+      logic-delete-field: deleted  # 逻辑删除字段
+      logic-not-delete-value: 0
+      logic-delete-value: 1
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 开发环境开启SQL日志
+
 weibo:
+  schedule:
+    min-hour: 8     # 最早签到时间(时)
+    max-hour: 15    # 最晚签到时间(时)
+    retry:
+      delay: 30     # 重试间隔(分钟)
+      max-attempts: 3 # 最大重试次数
   sign:
     cron: "0 0 8 * * ?" # 默认每天8点执行
   notify:
@@ -44,3 +55,9 @@ weibo:
         【${username}】微博签到完成
         已签超话：${count}个
         列表：${details}
+      alert: |
+        【${title}】
+        时间: ${now?datetime}
+        异常: ${exception.class.simpleName}
+        消息: ${exception.message!}
+        堆栈: ${stackTrace!}

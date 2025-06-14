@@ -2,9 +2,10 @@ package com.weibo.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.weibo.config.AppConfig;
-import com.weibo.exception.WeiboApiException;
+import com.weibo.constant.ResultCode;
+import com.weibo.exception.WeiboException;
 import com.weibo.model.WeiboConfig;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
 import okhttp3.OkHttpClient;
 import okhttp3.MediaType;
@@ -15,9 +16,9 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 @Service
+@Slf4j
 public class WeiboApiClient {
     private static final String BASE_API_URL = "https://api.weibo.cn";
     private static final MediaType FORM = MediaType.get("application/x-www-form-urlencoded; charset=utf-8");
@@ -40,7 +41,7 @@ public class WeiboApiClient {
     }
 
 
-    public JsonNode getUserInfo(String cookie) throws IOException {
+    public JsonNode getUserInfo(String cookie) {
         Request request = new Request.Builder()
                 .url(BASE_API_URL + "/2/users/update")
                 .post(buildFormBody(cookie))
@@ -49,6 +50,12 @@ public class WeiboApiClient {
 
         try (Response response = httpClient.newCall(request).execute()) {
             return objectMapper.readTree(response.body().string());
+        } catch (IOException e) {
+            log.error("获取用户信息出错{}",ResultCode.CONNECT_ERROR.getMessage(),e);
+            throw new WeiboException(
+                    ResultCode.CONNECT_ERROR,
+                    e.getMessage()
+            );
         }
     }
 

@@ -8,6 +8,7 @@ import io.micrometer.common.util.StringUtils;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
@@ -21,6 +22,9 @@ import java.util.stream.Collectors;
 public class EmailNotifier implements Notifier {
     private final JavaMailSender mailSender;
     private final NotifyTemplateProperties templates;
+
+    @Value("${spring.mail.admin}") // 从配置读取管理员邮箱
+    private String adminEmail;
 
     @Override
     public void notify(WeiboConfig config, String username, List<Topic> signedTopics) {
@@ -50,9 +54,25 @@ public class EmailNotifier implements Notifier {
         }
     }
 
+    public void sendAlert(String title, String content) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setFrom("ajar1996@163.com");
+            helper.setTo(adminEmail); // 直接发送到管理员邮箱
+            helper.setSubject(title);
+            helper.setText(content);
+            mailSender.send(message);
+        } catch (Exception e) {
+            log.error("告警邮件发送失败", e);
+        }
+    }
+
+
     private String buildDetails(List<Topic> topics) {
         return topics.stream()
             .map(t -> t.getTitle() + "(Lv." + t.getLevel() + ")")
             .collect(Collectors.joining("、"));
     }
+
 }

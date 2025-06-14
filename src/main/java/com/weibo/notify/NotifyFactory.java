@@ -27,9 +27,7 @@ public class NotifyFactory {
         else if (StringUtils.isNotBlank(config.getServerKey())) {
             notifiers.add(serverChanNotifier);
         }
-        
 
-        
         return notifiers;
     }
 }
