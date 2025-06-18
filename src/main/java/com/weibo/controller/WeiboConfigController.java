@@ -1,6 +1,5 @@
 package com.weibo.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.weibo.mapper.WeiboConfigMapper;
 import com.weibo.model.WeiboConfig;
 import com.weibo.service.CookieManager;
@@ -14,7 +13,7 @@ import java.util.List;
 public class WeiboConfigController {
 
     @Autowired
-     WeiboConfigMapper configMapper;
+    WeiboConfigMapper configMapper;
 
     @Autowired
     CookieManager cookieManager;
