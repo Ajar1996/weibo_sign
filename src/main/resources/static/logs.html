@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务执行日志</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .container { max-width: 1200px; }
+        .table th { white-space: nowrap; }
+        .action-buttons { white-space: nowrap; }
+        .status-success { color: #198754; }
+        .status-fail { color: #dc3545; }
+        .status-pending { color: #ffc107; }
+        .status-running { color: #0dcaf0; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>任务执行日志</h2>
+            <div>
+                <a href="/" class="btn btn-secondary me-2">
+                    <i class="bi bi-house-door"></i> 返回首页
+                </a>
+            </div>
+        </div>
+
+        <!-- 搜索栏 -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" id="searchWeiboName" placeholder="微博名称">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" id="searchXianyuName" placeholder="闲鱼名称">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="searchLogType">
+                            <option value="">全部状态</option>
+                            <option value="SCHEDULED">计划执行</option>
+                            <option value="EXECUTING">执行中</option>
+                            <option value="RETRYING">重试中</option>
+                            <option value="SUCCESS">成功</option>
+                            <option value="FAILED">失败</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-primary" onclick="searchLogs()">
+                            <i class="bi bi-search"></i> 搜索
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 日志列表 -->
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>配置名称</th>
+                        <th>重试次数</th>
+                        <th>计划时间</th>
+                        <th>开始时间</th>
+                        <th>结束时间</th>
+                        <th>耗时(秒)</th>
+                        <th>状态</th>
+                        <th>错误信息</th>
+                    </tr>
+                </thead>
+                <tbody id="logList">
+                    <!-- 数据将通过JavaScript动态加载 -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 分页控件 -->
+        <nav aria-label="Page navigation" class="mt-4">
+            <ul class="pagination justify-content-center" id="pagination">
+                <!-- 分页将通过JavaScript动态加载 -->
+            </ul>
+        </nav>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentPage = 1;
+        const pageSize = 10;
+
+        // 执行类型映射
+        const executionTypeMap = {
+            'SCHEDULED': { text: '计划执行', class: 'status-pending' },
+            'EXECUTING': { text: '执行中', class: 'status-running' },
+            'RETRYING': { text: '重试中', class: 'status-pending' },
+            'SUCCESS': { text: '成功', class: 'status-success' },
+            'FAILED': { text: '失败', class: 'status-fail' }
+        };
+
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            loadLogs(1);
+        });
+
+        // 加载日志列表
+        function loadLogs(page) {
+            currentPage = page;
+            const weiboName = document.getElementById('searchWeiboName').value;
+            const xianyuName = document.getElementById('searchXianyuName').value;
+            const logType = document.getElementById('searchLogType').value;
+
+            const url = `/api/task-logs?page=${page}&size=${pageSize}&weiboName=${encodeURIComponent(weiboName)}&xianyuName=${encodeURIComponent(xianyuName)}&logType=${encodeURIComponent(logType)}`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.code === 200 && result.data) {
+                        const data = result.data;
+                        const tbody = document.getElementById('logList');
+                        tbody.innerHTML = '';
+                        data.records.forEach(log => {
+                            console.log('Status:', log.executionType); // 调试日志
+                            const status = executionTypeMap[log.executionType] || { text: log.executionType, class: 'status-pending' };
+                            tbody.innerHTML += `
+                                <tr>
+                                    <td>${log.id}</td>
+                                    <td>${log.configName}</td>
+                                    <td>${log.attemptNumber}</td>
+                                    <td>${formatDateTime(log.scheduledTime)}</td>
+                                    <td>${formatDateTime(log.actualStartTime)}</td>
+                                    <td>${formatDateTime(log.endTime)}</td>
+                                    <td>${log.durationSeconds}</td>
+                                    <td><span class="${status.class}">${status.text}</span></td>
+                                    <td>${log.errorMessage || '-'}</td>
+                                </tr>
+                            `;
+                        });
+
+                        // 更新分页
+                        updatePagination(data.total, page);
+                    } else {
+                        throw new Error(result.msg || '加载数据失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('加载数据失败：' + error.message);
+                });
+        }
+
+        // 搜索日志
+        function searchLogs() {
+            loadLogs(1);
+        }
+
+        // 更新分页控件
+        function updatePagination(total, currentPage) {
+            const totalPages = Math.ceil(total / pageSize);
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            // 上一页
+            pagination.innerHTML += `
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="return loadLogs(${currentPage - 1})">上一页</a>
+                </li>
+            `;
+
+            // 页码
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
+                    pagination.innerHTML += `
+                        <li class="page-item ${i === currentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="return loadLogs(${i})">${i}</a>
+                        </li>
+                    `;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    pagination.innerHTML += `
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    `;
+                }
+            }
+
+            // 下一页
+            pagination.innerHTML += `
+                <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                    <a class="page-link" href="#" onclick="return loadLogs(${currentPage + 1})">下一页</a>
+                </li>
+            `;
+        }
+
+        // 格式化日期时间
+        function formatDateTime(dateTimeStr) {
+            if (!dateTimeStr) return '-';
+            const date = new Date(dateTimeStr);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+    </script>
+</body>
+</html> 

@@ -1,5 +1,6 @@
 package com.weibo.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.weibo.mapper.WeiboConfigMapper;
 import com.weibo.model.WeiboConfig;
 import com.weibo.service.CookieManager;
@@ -33,7 +34,7 @@ public class WeiboConfigController {
     public void updateConfig(@PathVariable Integer id,
                              @RequestBody WeiboConfig config) {
         config.setId(id);
-        configMapper.update(config);
+        configMapper.updateById(config);
     }
 
     @DeleteMapping("/{id}")

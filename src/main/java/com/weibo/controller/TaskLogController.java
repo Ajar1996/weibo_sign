@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/api/task-logs")
 @RequiredArgsConstructor
@@ -20,10 +19,16 @@ public class TaskLogController {
 
     @GetMapping
     public Result<Page<TaskExecutionLog>> list(
-            @ModelAttribute TaskLogQueryParam param,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String weiboName,
+            @RequestParam(required = false) String xianyuName,
+            @RequestParam(required = false) String logType,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return Result.success(logQueryService.queryLogs(param, page, size));
+        TaskLogQueryParam param = new TaskLogQueryParam();
+        param.setWeiboName(weiboName);
+        param.setXianyuName(xianyuName);
+        param.setLogTypeCode(logType);
+        return Result.success(logQueryService.queryLogs(param, page - 1, size));
     }
 
     @GetMapping("/stats")

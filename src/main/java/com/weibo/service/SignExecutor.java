@@ -1,7 +1,6 @@
 package com.weibo.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.weibo.config.AppConfig;
 import com.weibo.model.Topic;
 import com.weibo.model.WeiboConfig;
 import lombok.extern.slf4j.Slf4j;

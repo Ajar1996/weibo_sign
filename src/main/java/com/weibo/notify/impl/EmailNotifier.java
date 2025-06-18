@@ -13,6 +13,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +24,7 @@ import java.util.stream.Collectors;
 public class EmailNotifier implements Notifier {
     private final JavaMailSender mailSender;
     private final NotifyTemplateProperties templates;
+    private static final String[] WEEKDAYS = {"星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"};
 
     @Value("${spring.mail.admin}") // 从配置读取管理员邮箱
     private String adminEmail;
@@ -33,11 +36,27 @@ public class EmailNotifier implements Notifier {
         }
 
         try {
+            // 获取当前日期和星期
+            LocalDate now = LocalDate.now();
+            String date = now.format(DateTimeFormatter.ofPattern("MM-dd"));
+            String weekday = WEEKDAYS[now.getDayOfWeek().getValue() - 1];
+
+            // 统计成功和失败的数量
+            long successCount = signedTopics.stream()
+                .filter(topic -> "已签".equals(topic.getSignStatus()))
+                .count();
+            List<Topic> failedTopics = signedTopics.stream()
+                .filter(topic -> "签到".equals(topic.getSignStatus()))
+                .collect(Collectors.toList());
+
             // 从YAML加载模板
             String content = templates.getEmail()
+                .replace("${date}", date)
+                .replace("${weekday}", weekday)
                 .replace("${username}", username)
-                .replace("${count}", String.valueOf(signedTopics.size()))
-                .replace("${details}", buildDetails(signedTopics));
+                .replace("${count}", String.valueOf(successCount))
+                .replace("${total}", String.valueOf(signedTopics.size()))
+                .replace("${details}", buildDetails(signedTopics, failedTopics));
 
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -68,11 +87,23 @@ public class EmailNotifier implements Notifier {
         }
     }
 
+    private String buildDetails(List<Topic> allTopics, List<Topic> failedTopics) {
+        StringBuilder details = new StringBuilder();
+        
+        // 添加成功签到的超话
+        details.append("成功签到\n\n");
+        allTopics.stream()
+            .filter(topic -> "已签".equals(topic.getSignStatus()))
+            .forEach(topic -> details.append("- ").append(topic.getTitle())
+                .append(" (等级: ").append(topic.getLevel()).append(") ✅\n"));
 
-    private String buildDetails(List<Topic> topics) {
-        return topics.stream()
-            .map(t -> t.getTitle() + "(Lv." + t.getLevel() + ")")
-            .collect(Collectors.joining("、"));
+        // 如果有失败的，添加失败的超话
+        if (!failedTopics.isEmpty()) {
+            details.append("\n签到失败\n\n");
+            failedTopics.forEach(topic -> details.append("- ")
+                .append(topic.getTitle()).append(" ❌\n"));
+        }
+
+        return details.toString();
     }
-
 }

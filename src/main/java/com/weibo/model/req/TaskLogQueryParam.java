@@ -5,6 +5,8 @@ import org.intellij.lang.annotations.Pattern;
 
 @Data
 public class TaskLogQueryParam {
+    private Long configId;
+    
     private String weiboName;
     
     private String xianyuName;

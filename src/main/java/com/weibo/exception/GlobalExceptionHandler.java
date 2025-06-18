@@ -9,11 +9,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 @Slf4j
 @RestControllerAdvice
 @RequiredArgsConstructor
 public class GlobalExceptionHandler {
-
 
     private final EmailNotifier emailNotifier;
     /**
@@ -44,12 +46,23 @@ public class GlobalExceptionHandler {
     private void sendAlertEmail(ResultCode code, Exception ex) {
         String subject = "【" + code.getCode() + "】" + code.getMessage();
         String content = String.format(
-                "状态码: %d\n异常: %s\n消息: %s\n堆栈: %s",
-                code.getCode(),
+                "【%s】\n时间: %s\n异常: %s\n消息: %s\n堆栈: \n%s",
+                code.getMessage(),
+                java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
                 ex.getClass().getSimpleName(),
                 ex.getMessage(),
-                ex.getStackTrace()
+                getStackTraceAsString(ex)
         );
-        emailNotifier.sendAlert(subject,content);
+        emailNotifier.sendAlert(subject, content);
+    }
+
+    /**
+     * 获取格式化的堆栈信息
+     */
+    private String getStackTraceAsString(Throwable throwable) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        throwable.printStackTrace(pw);
+        return sw.toString();
     }
 }
