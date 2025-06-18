@@ -40,7 +40,7 @@ public class WeiboTaskExecutor {
                 .withSecond(0);
 
         // 记录调度日志
-        taskLogService.recordLog(config, TaskLogType.SCHEDULE.getCode(), 0, scheduledTime, null, null, null);
+        taskLogService.recordLog(config, TaskLogType.SCHEDULED.getCode(), 0, scheduledTime, null, null, null);
 
         String cron = String.format("0 %d %d * * ?",
                 executeTime.getMinute(),
@@ -55,7 +55,7 @@ public class WeiboTaskExecutor {
     @Transactional(rollbackFor = Exception.class)
     public void executeWithRetry(WeiboConfig config, int currentAttempt) {
         LocalDateTime startTime = LocalDateTime.now();
-        taskLogService.recordLog(config,  TaskLogType.EXECUTE.getCode(), currentAttempt+1, null, startTime, null, null);
+        taskLogService.recordLog(config, TaskLogType.EXECUTING.getCode(), currentAttempt+1, null, startTime, null, null);
 
         try {
             signService.weiBoSign(config);
@@ -80,7 +80,7 @@ public class WeiboTaskExecutor {
             attemptCounts.put(config.getId(), nextAttempt);
 
             LocalDateTime retryTime = LocalDateTime.now().plusMinutes(delayMinutes);
-            taskLogService.recordLog(config, TaskLogType.RETRY.getCode(), nextAttempt,
+            taskLogService.recordLog(config, TaskLogType.RETRYING.getCode(), nextAttempt,
                     retryTime, startTime, null, e.getMessage());
 
             taskScheduler.schedule(
@@ -89,7 +89,7 @@ public class WeiboTaskExecutor {
             );
         } else {
             LocalDateTime endTime = LocalDateTime.now();
-            taskLogService.recordLog(config, TaskLogType.FAILURE.getCode(), currentAttempt+1,
+            taskLogService.recordLog(config, TaskLogType.FAILED.getCode(), currentAttempt+1,
                     null, startTime, endTime, e.getMessage());
             attemptCounts.remove(config.getId());
         }
